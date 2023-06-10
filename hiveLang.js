@@ -245,7 +245,7 @@ function stepAnt(ant,index){
           return true;
       }
       break;
-    case '+':case '-':case '*':case ':':case '%':case '=':{
+    case '+':case '-':case '*':case '%':case '=':{
       if(grid[ant.y][ant.x].ants.length==0){//wait for a second ant
         ants.splice(index,1);
         grid[ant.y][ant.x].ants.push(ant);//store ant in cell
@@ -299,7 +299,7 @@ function readNumber(){
     break;
   }
   let negate=c==('-'.charCodeAt(0));
-  let x=c-'0'.charCodeAt(0);
+  let x=(c>=('0'.charCodeAt(0))&&c<=('9'.charCodeAt(0)))?c-'0'.charCodeAt(0):0;
   c=stdinRead();
   while(c>=('0'.charCodeAt(0))&&c<=('9'.charCodeAt(0))){
     x*=10;
