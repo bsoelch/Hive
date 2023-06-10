@@ -1,8 +1,8 @@
 # Hive
 Hive is a 2-dimensional Programming Language, based on the idea of Hive intelligence.
 
-<!-- TODO formulation-->
-For a Hive-Program to complete its task multiple ants (instruction pointers) have to be active at the same time.
+An single ant (instruction pointer) can only solve the most basic tasks,
+ but if through the interactions of multiple ants much more complicated tasks can be completed.
 
 ## Examples
 
@@ -63,18 +63,42 @@ Each ant can remember a single (signed) 32-bit integer to store more complicated
 
 Common memory constructs:
 ### Stacks & Queues
-The instructions `[` `]` `(` and `)` can be used to construct stacks/queues:
 
-<!-- TODO explanation-->
-Queue:
+The instructions `[ ]` and `( )` can be used to construct queues and stacks.
+Both constructions assume that all arriving ants have distances that are multiples of 2
+
+* Queue (`[]`)
+
 ```
-[]
+     D
+     ^
+ A> [] >C
+     ^
+     B
 ```
 
-Stack:
+Enqueue:
+Ants moving east from `A` will get trapped between the brackets.
+
+Dequeue:
+When an ant moving north from `B` hits the bracket the first ant in the queue will leave the brackets in direction `C`, the ant coming from `B` will continue moving towards `D`. If no ants are in the queue, the incoming ant will be waiting in the bracket until an ant is added to the queue.
+
+* Stack (`>(]`)
+
 ```
->(]
+     C
+     ^
+ A> >(]
+     ^
+     B
 ```
+
+Push:
+Ants moving east from `A` will get trapped between `>` and `]`
+
+Pop:
+When an ant moving north from `B` hits the bracket the first ant in the queue will leave the brackets in direction `C`, the ant coming from `B` will be killed in the process. If no ants are on the stack, the incoming ant will be waiting in the bracket until an ant is added to the stack.
+
 
 ## Syntax
 
@@ -117,7 +141,8 @@ If another ant is already waiting at the cell this ant will be released, and ant
 Independent of the previous state of the cell ants moving in north-south direction will wait on the cell until the next ant arrives.
 
 <!-- XXX? formulation-->
-- `(` `)` (description only for `(`, `)` acts the same but with east and west swapped
+- `(` `)` (description only for `(`, `)` acts the same but with east and west swapped)
+
 Ants moving east, will release any ants waiting in the cell, and then wait for the next ant to arrive.
 If there are ants waiting in the cell, ants moving west will be redirected to move east, 
 if no ants are waiting they will continue to move west.
