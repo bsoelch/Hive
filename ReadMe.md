@@ -15,6 +15,14 @@ print Fibonacci numbers less than 1000:
  \   /
 ```
 
+"Hello World" Program:
+```
+#72 .@#101.@#108.@
+#108.@#111.@#32 .@
+#87 .@#111.@#114.@
+#108.@#100.@#33 .@
+```
+
 ## Usage
 Run the given HTML file in a browser (I tested only the newest version of Firefox),
 the script `hiveLang.js` should be in the same directory as the HTML file
