@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html charset="utf-8">
+<body style="width: 100%;heigth: 100%;" type="tel">
+<textArea style="z-index:1;position:fixed;left:0;top:0;width:75vw;height:100vh;background:rgba(0,0,0,0);color:rgba(0,0,0,0);border:0;outline: none;" id="canvasInput" charset="utf-8"></textArea>
+<canvas width=1600 height=1200 style="position:fixed;left:0;top:0;width:75vw;height:100vh;background:#222222" id="canvas">Canvas</canvas>
+<textArea style="z-index:2;position:fixed;left:75vw;top:0vh;width:25vw;height:50vh;background:#222222;color:#ffffff;outline: none;" id="input" charset="utf-8" ></textArea>
+<textArea style="z-index:2;position:fixed;left:75vw;top:50vh;width:25vw;height:50vh;background:#222222;color:#ffffff;outline: none;" id="output" charset="utf-8" readonly></textArea>
+</body>
+<script src="./hiveLang.js"></script>
+<script>
+const canvas=document.getElementById("canvas");
+const stdinArea=document.getElementById("input");
+const stdoutArea=document.getElementById("output");
+const canvasInput=document.getElementById("canvasInput");//use text-area for capturing character input (only way to detect modifier keys)
+const ctx=canvas.getContext("2d");
+const utf8Decode=new TextDecoder('utf-8');
+const utf8Encode=new TextEncoder('utf-8');
+let textMode=false;
+let stdinIndex=0;
+let stdOutBytes=[];
+canvasInput.focus();
+canvasInput.addEventListener('wheel', (event) => {
+  let x=event.layerX*(canvas.width/canvas.offsetWidth);
+  let y=event.layerY*(canvas.height/canvas.offsetHeight);
+  zoom(event.deltaY>0?1:-1,x,y,canvas);
+  redraw();
+});
+let prevX=0,prevY=0,dragging=false;
+canvasInput.addEventListener('mousedown', (event) => {
+  if(textMode)
+    return;
+  dragging=true;
+  prevX=event.layerX;
+  prevY=event.layerY;
+});
+canvasInput.addEventListener('mousemove', (event) => {
+  if(textMode)
+    return;
+  if(dragging){
+    xOffset+=(event.layerX-prevX)*(canvas.width/canvas.offsetWidth);
+    yOffset+=(event.layerY-prevY)*(canvas.height/canvas.offsetHeight);
+    redraw();
+    prevX=event.layerX;
+    prevY=event.layerY;
+  }
+});
+canvasInput.addEventListener('mouseup', (event) => {
+  if(textMode)
+    return;
+  dragging=false;
+});
+canvasInput.addEventListener('dblclick', (event) => {
+  if(textMode)
+    return;
+  let x=event.layerX*(canvas.width/canvas.offsetWidth);
+  let y=event.layerY*(canvas.height/canvas.offsetHeight);
+  [editX,editY]=canvasPosToGridPos(x,y);
+  editDirection=EAST;
+  editMode=true;
+  redraw();
+});
+canvasInput.addEventListener("keydown", function(event) {
+  if(textMode){
+    if(event.ctrlKey){
+      switch(event.key){
+        case 's':
+          editMode=false;
+          endTextMode();
+          redraw();
+          event.preventDefault();
+          break;
+        case 'e':
+          endTextMode();
+          redraw();
+          event.preventDefault();
+          break;
+      }
+    }
+    return;
+  }
+  event.preventDefault();
+  if(!editMode){
+    if(event.ctrlKey){
+      switch(event.key){
+        case 'e':
+          beginTextMode();
+          event.preventDefault();
+          break;
+        //XXX ctrl-z for undo
+      }
+      return;
+    }
+    switch(event.key){
+      case 'r':
+        ants=[];
+        stdinIndex=0;
+        stdOutBytes=[];
+        output.value="";
+        initAnts();
+        redraw();
+        return;
+      case 's':
+        stepAnts();
+        redraw();
+        return;
+      //TODO animation mode
+    }
+    return;
+  }else{
+    if(event.ctrlKey){
+      switch(event.key){
+        case 's':case 'ArrowRight':case '+':
+          editMode=false;
+          redraw();
+          event.preventDefault();
+          break;
+        //TODO undo operation
+        case 'e':
+          beginTextMode();
+          event.preventDefault();
+          break;
+        //XXX allow moving/copy-pasing regions of text
+      }
+      return;//no action if ctrl key is pressed
+    }
+    if(event.altKey)
+      return;//ignore key presses when control/alt is down
+    if(event.key.length==1){
+      editCell(event.key);
+      redraw();
+      return;
+    }
+    switch(event.key){
+      case "Enter":
+        editMode=false;
+        redraw();
+        return;
+      case "ArrowUp":
+        editY--;
+        redraw();
+        return;
+      case "ArrowDown":
+        editY++;
+        redraw();
+        return;
+      case "ArrowLeft":
+        editX--;
+        redraw();
+        return;
+      case "ArrowRight":
+        editX++;
+        redraw();
+        return;
+      case "Backspace":
+        editCell(" ",true);
+        redraw();
+        return;
+      case "Delete":
+        editCell(" ");
+        redraw();
+        return;
+    }
+    globalEvent=event;
+  }
+});
+canvasInput.addEventListener("compositionupdate", (event) => {
+    if(textMode)
+      return;
+    event.preventDefault();
+    if(event.data.length==1){//detects ^ key
+      editCell(event.data);
+      redraw();
+    }
+});
+function stdinRead(){
+  let stdin=Array.from(utf8Encode.encode(stdinArea.value));
+  if(stdinIndex>=stdin.length)
+    return -1;
+  return stdin[stdinIndex++];
+}
+function stdinUnread(){
+  if(stdinIndex>0)
+    stdinIndex--;
+}
+function stdoutWrite(chr){
+  if(chr<0)
+    chr=(chr%256+256);
+  stdOutBytes.push(chr%256);
+  output.value=utf8Decode.decode(new Uint8Array(stdOutBytes));
+}
+function beginTextMode(){
+  textMode=true;
+  canvasInput.value=gridToString();
+  canvasInput.style.background="#222222";
+  canvasInput.style.color="#ffffff";
+}
+function endTextMode(){
+  textMode=false;
+  grid=gridFromString(canvasInput.value);
+  canvasInput.style.background="rgba(0,0,0,0)";
+  canvasInput.style.color="rgba(0,0,0,0)";
+  canvasInput.value="";
+}
+function redraw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawOn(ctx);
+}
+redraw();
+output.value=utf8Decode.decode(new Uint8Array(stdOutBytes));
+</script>
+</html>
