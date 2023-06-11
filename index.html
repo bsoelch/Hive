@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html charset="utf-8">
-<body style="width: 100%;heigth: 100%;" type="tel">
-<textArea style="z-index:1;position:fixed;left:0;top:0;width:75vw;height:100vh;background:rgba(0,0,0,0);color:rgba(0,0,0,0);border:0;outline: none;" id="canvasInput" charset="utf-8"></textArea>
-<canvas width=1600 height=1200 style="position:fixed;left:0;top:0;width:75vw;height:100vh;background:#222222" id="canvas">Canvas</canvas>
-<textArea style="z-index:2;position:fixed;left:75vw;top:0vh;width:25vw;height:50vh;background:#222222;color:#ffffff;outline: none;" id="input" charset="utf-8" ></textArea>
-<textArea style="z-index:2;position:fixed;left:75vw;top:50vh;width:25vw;height:50vh;background:#222222;color:#ffffff;outline: none;" id="output" charset="utf-8" readonly></textArea>
+<body style="width: 100%;height: 100%;background:#222222">
+<div style="position:fixed;left:0;top:0;width:100vw;height:50px;" id="base" charset="utf-8" >
+<button style="position:absolute;left:15px;top:3px;width:46px;height:46px;color:#ffffff;border-radius:5px;background-color:#101010;font-size:30px;border:0;outline: none;"
+  title="edit source code as text ( ctrl - e )" onclick="toggleTextMode();">🖉</button>
+<button style="position:absolute;left:65px;top:3px;width:46px;height:46px;color:#ffffff;border-radius:5px;background-color:#101010;font-size:30px;border:0;outline: none;"
+  title="edit source code ( double click cell )" onclick="toggleEditMode();">□</button>
+
+<button style="position:absolute;left:calc(75vw - 150px);top:3px;width:46px;height:46px;color:#ffffff;border-radius:5px;background-color:#101010;font-size:30px;border:0;outline: none;"
+  title="reset to initial state ( r )" onclick="reset();"><<</button>
+<button style="position:absolute;left:calc(75vw - 100px);top:3px;width:46px;height:46px;color:#808080;border-radius:5px;background-color:#101010;font-size:30px;border:0;outline: none;"
+  title="revert step, currently unimplemented" onclick="revert();">&lt;</button>
+  <!-- XXX? play/pause button-->
+<button style="position:absolute;left:calc(75vw - 50px);top:3px;width:46px;height:46px;color:#ffffff;border-radius:5px;background-color:#101010;font-size:30px;border:0;outline: none;"
+  title="execute next step ( s )" onclick="step();">&gt;</button>
+
+</div>
+<div style="position:fixed;left:0;top:50px;width:100vw;height:calc(100vh - 50px);">
+<textArea style="z-index:1;position:absolute;left:0;top:0;width:75%;height:100%;background:rgba(0,0,0,0);color:rgba(0,0,0,0);padding:15px;border:0;outline: none;" id="canvasInput" charset="utf-8"></textArea>
+<canvas width=1600 height=1200 style="position:absolute;left:0;top:0;width:75%;height:100%;background:#222222" id="canvas">Canvas</canvas>
+<div style="position:absolute;left:75%;top:0;width:25%;height:100%;">
+<text style="position:absolute;left:5%;top:3%;width:90%;height:30px;color:#ffffff;">Input:</text>
+<textArea style="position:absolute;left:5%;top:calc(3% + 35px);width:90%;height:calc(44% - 35px);background:#222222;color:#ffffff;outline: none;" id="input" charset="utf-8" ></textArea>
+<text style="position:absolute;left:5%;top:53%;width:90%;height:30px;color:#ffffff;">Output:</text>
+<textArea style="position:absolute;left:5%;top:calc(53% + 35px);width:90%;height:calc(44% - 35px);background:#222222;color:#ffffff;outline: none;" id="output" charset="utf-8" readonly></textArea>
+</div>
+</div>
 </body>
 <script src="./hiveLang.js"></script>
 <script>
@@ -15,6 +36,7 @@ const canvasInput=document.getElementById("canvasInput");//use text-area for cap
 const ctx=canvas.getContext("2d");
 const utf8Decode=new TextDecoder('utf-8');
 const utf8Encode=new TextEncoder('utf-8');
+//editMode declared in hiveLang.js
 let textMode=false;
 let stdinIndex=0;
 let stdOutBytes=[];
@@ -92,16 +114,10 @@ canvasInput.addEventListener("keydown", function(event) {
     }
     switch(event.key){
       case 'r':
-        ants=[];
-        stdinIndex=0;
-        stdOutBytes=[];
-        output.value="";
-        initAnts();
-        redraw();
+        reset();
         return;
       case 's':
-        stepAnts();
-        redraw();
+        step();
         return;
       //TODO animation mode
     }
@@ -200,6 +216,42 @@ function endTextMode(){
   canvasInput.style.background="rgba(0,0,0,0)";
   canvasInput.style.color="rgba(0,0,0,0)";
   canvasInput.value="";
+}
+function toggleTextMode(){
+  if(textMode){
+    endTextMode();
+    redraw();
+  }else{
+    beginTextMode();
+  }
+}
+function toggleEditMode(){
+  if(editMode){
+    editMode=false;
+  }else{
+    editMode=true;
+    canvasInput.focus();
+  }
+  redraw();
+}
+function reset(){
+  if(textMode)endTextMode();
+  editMode=false;
+  ants=[];
+  stdinIndex=0;
+  stdOutBytes=[];
+  output.value="";
+  initAnts();
+  redraw();
+}
+function revert(){
+  //TODO implement undo for steps
+}
+function step(){
+  if(textMode)endTextMode();
+  editMode=false;
+  stepAnts();
+  redraw();
 }
 function redraw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);

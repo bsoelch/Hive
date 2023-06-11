@@ -28,10 +28,8 @@ Run the given HTML file in a browser (I tested only the newest version of Firefo
 the script `hiveLang.js` should be in the same directory as the HTML file
 
 ### Interpreter mode
-<!-- TODO more intuitive controls -->
-top left area -> input
-bottom left -> output
 
+Keyboard shortcuts:
 - `s` step forward
 - `r` reset
 - `ctrl-e` switch to text-edit mode
@@ -43,14 +41,14 @@ double-clicking on a cell will activate edit-mode and move the edit cursor to th
 
 Use the arrow keys to move the cursor, writing a character will insert it in the current cell and advance the edit cursor by one cell, writing a mirror will update the edit-direction.
 
-Keyboard shortcuts
+Keyboard shortcuts:
 - `ctrl-e` switch to text-edit mode
 - `ctrl-s` switch to interpreter mode
 - `Enter` switch to interpreter mode
 
 ### Text Edit Mode
 
-Keyboard shortcuts
+Keyboard shortcuts:
 - `ctrl-e` switches in/out of text-edit mode
 - `ctrl-s` switch to interpreter mode
 
