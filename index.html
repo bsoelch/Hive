@@ -35,8 +35,18 @@
 <script>
 let urlParams=new URLSearchParams((new URL(document.URL)).search);
 let srcParam=urlParams.get("src");
+
+function b64encode(str){
+  let x=btoa(str);
+  return x.replace('+','-').replace('/','_');
+}
+function b64decode(str){
+  x=str.replace('-','+').replace('_','/');
+  return atob(x);
+}
+
 if(srcParam){
-  srcParam=atob(srcParam);
+  srcParam=b64decode(srcParam);
 }else{
   srcParam=`
               #2v2\\
